@@ -1,0 +1,45 @@
+% Config file. You can select the kernel by setting its value.
+%
+% ########################################################################################
+% dot
+% ---
+% Computes the dot product between two vectors.
+% ---
+% Possible values: 
+%    0: basic kernel
+%    1: slightly more advanced kernel which avoids synchronizations for warps.
+% ########################################################################################
+% spmv
+% ---
+% Computes the matrix-vector product y = Ax.
+% ---
+% Possible values: 
+%    0: basic kernel
+%    1: LDG to load A
+%    2: LDG to load x
+%    3: 4 threads per block of A
+%    4: 32 threads per row of A
+%    5: 16 threads per row of A
+%    6: kernel which fixes divergence issues.
+% ########################################################################################
+% jacobi_invert_diag
+% ---
+% Invert the diagonal of A. It's needed by the Jacobi solver.
+% ---
+% Possible values: 
+%    0: basic kernel using Cramer's rule to invert a 4x4 matrix
+%    1: add const __restrict to pointers.
+% ########################################################################################
+% jacobi_smooth
+% ---
+% Apply an iteration of the Jacobi solver/smoother.
+% ---
+% Possible values: 
+%    0: basic kernel
+%    1: use 4 threads per element.
+%
+% ########################################################################################
+dot=0
+spmv=0
+jacobi_invert_diag=1
+jacobi_smooth=0
