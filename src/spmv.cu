@@ -552,7 +552,7 @@ void spmv_kernel_v6( const int A_num_rows,
     my_y[3] = my_A[3]*my_x; 
 
     // Each thread iterates over its row.
-    for( int it = A_rows[row] + lane_id_mod_16/4, end = A_rows[row+1] ; it < end ; it += 4 )
+    for( int it = A_rows[row] + lane_id_mod_16/4, end = A_rows[row+1] ; __any(it < end) ; it += 4 )
     {
       if( it >= end )
         continue;
