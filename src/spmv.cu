@@ -328,8 +328,6 @@ void spmv_kernel_v4( const int A_num_rows,
 
   // Shared memory to run the reduction.
   __shared__ volatile double smem[BLOCK_SIZE];
-  // Shared memory to broadcast column ids.
-  __shared__ volatile int scols[BLOCK_SIZE];
 
   // Lane in the warp.
   const int warp_id = warpid();
@@ -381,6 +379,7 @@ void spmv_kernel_v4( const int A_num_rows,
     }
 
     // Run the reduction.
+#if __CUDA_ARCH__ >= 300
     #pragma unroll
     for( int mask = WARP_SIZE/2 ; mask > 0 ; mask >>= 1 )
     {
@@ -389,6 +388,31 @@ void spmv_kernel_v4( const int A_num_rows,
       my_y[2] += shfl_xor(my_y[2], mask);
       my_y[3] += shfl_xor(my_y[3], mask);
     }
+#else
+    smem[threadIdx.x] = my_y[0];
+    #pragma unroll
+    for( int offset = WARP_SIZE/2 ; offset > 0 ; offset >>= 1 )
+      if( lane_id < offset )
+        smem[threadIdx.x] = my_y[0] += smem[threadIdx.x + offset];
+    
+    smem[threadIdx.x] = my_y[1];
+    #pragma unroll
+    for( int offset = WARP_SIZE/2 ; offset > 0 ; offset >>= 1 )
+      if( lane_id < offset )
+        smem[threadIdx.x] = my_y[1] += smem[threadIdx.x + offset];
+    
+    smem[threadIdx.x] = my_y[2];
+    #pragma unroll
+    for( int offset = WARP_SIZE/2 ; offset > 0 ; offset >>= 1 )
+      if( lane_id < offset )
+        smem[threadIdx.x] = my_y[2] += smem[threadIdx.x + offset];
+    
+    smem[threadIdx.x] = my_y[3];
+    #pragma unroll
+    for( int offset = WARP_SIZE/2 ; offset > 0 ; offset >>= 1 )
+      if( lane_id < offset )
+        smem[threadIdx.x] = my_y[3] += smem[threadIdx.x + offset];
+#endif
 
     if( lane_id == 0 )
     {
@@ -421,8 +445,6 @@ void spmv_kernel_v5( const int A_num_rows,
 
   // Shared memory to run the reduction.
   __shared__ volatile double smem[BLOCK_SIZE];
-  // Shared memory to broadcast column ids.
-  __shared__ volatile int scols[BLOCK_SIZE];
 
   // Lane in the warp.
   const int warp_id = warpid();
@@ -477,6 +499,7 @@ void spmv_kernel_v5( const int A_num_rows,
     }
 
     // Run the reduction.
+#if __CUDA_ARCH__ >= 300
     #pragma unroll
     for( int mask = 8 ; mask > 0 ; mask >>= 1 )
     {
@@ -485,6 +508,31 @@ void spmv_kernel_v5( const int A_num_rows,
       my_y[2] += shfl_xor(my_y[2], mask);
       my_y[3] += shfl_xor(my_y[3], mask);
     }
+#else
+    smem[threadIdx.x] = my_y[0];
+    #pragma unroll
+    for( int offset = 8 ; offset > 0 ; offset >>= 1 )
+      if( lane_id_mod_16 < offset )
+        smem[threadIdx.x] = my_y[0] += smem[threadIdx.x + offset];
+    
+    smem[threadIdx.x] = my_y[1];
+    #pragma unroll
+    for( int offset = 8 ; offset > 0 ; offset >>= 1 )
+      if( lane_id_mod_16 < offset )
+        smem[threadIdx.x] = my_y[1] += smem[threadIdx.x + offset];
+    
+    smem[threadIdx.x] = my_y[2];
+    #pragma unroll
+    for( int offset = 8 ; offset > 0 ; offset >>= 1 )
+      if( lane_id_mod_16 < offset )
+        smem[threadIdx.x] = my_y[2] += smem[threadIdx.x + offset];
+    
+    smem[threadIdx.x] = my_y[3];
+    #pragma unroll
+    for( int offset = 8 ; offset > 0 ; offset >>= 1 )
+      if( lane_id_mod_16 < offset )
+        smem[threadIdx.x] = my_y[3] += smem[threadIdx.x + offset];
+#endif
 
     if( lane_id_mod_16 == 0 )
     {
@@ -573,6 +621,7 @@ void spmv_kernel_v6( const int A_num_rows,
     }
 
     // Run the reduction.
+#if __CUDA_ARCH__ >= 300
     #pragma unroll
     for( int mask = 8 ; mask > 0 ; mask >>= 1 )
     {
@@ -581,6 +630,31 @@ void spmv_kernel_v6( const int A_num_rows,
       my_y[2] += shfl_xor(my_y[2], mask);
       my_y[3] += shfl_xor(my_y[3], mask);
     }
+#else
+    smem[threadIdx.x] = my_y[0];
+    #pragma unroll
+    for( int offset = 8 ; offset > 0 ; offset >>= 1 )
+      if( lane_id_mod_16 < offset )
+        smem[threadIdx.x] = my_y[0] += smem[threadIdx.x + offset];
+    
+    smem[threadIdx.x] = my_y[1];
+    #pragma unroll
+    for( int offset = 8 ; offset > 0 ; offset >>= 1 )
+      if( lane_id_mod_16 < offset )
+        smem[threadIdx.x] = my_y[1] += smem[threadIdx.x + offset];
+    
+    smem[threadIdx.x] = my_y[2];
+    #pragma unroll
+    for( int offset = 8 ; offset > 0 ; offset >>= 1 )
+      if( lane_id_mod_16 < offset )
+        smem[threadIdx.x] = my_y[2] += smem[threadIdx.x + offset];
+    
+    smem[threadIdx.x] = my_y[3];
+    #pragma unroll
+    for( int offset = 8 ; offset > 0 ; offset >>= 1 )
+      if( lane_id_mod_16 < offset )
+        smem[threadIdx.x] = my_y[3] += smem[threadIdx.x + offset];
+#endif
 
     if( lane_id_mod_16 == 0 )
     {

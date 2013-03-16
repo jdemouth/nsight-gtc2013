@@ -78,20 +78,6 @@ __device__ __inline__ int bfe( int mask, int first_bit, int num_bits )
   return res; 
 }
 
-__device__ __inline__ double shfl( volatile double *smem, double r, int lane )
-{
-  smem[threadIdx.x] = r;
-  return smem[laneid()*WARP_SIZE + lane];
-
-#if 0
-  int lo = __double2loint(r);
-  lo = __shfl( lo, lane );
-  int hi = __double2hiint(r);
-  hi = __shfl( hi, lane );
-  return __hiloint2double( hi, lo );
-#endif
-}
-
 __device__ __inline__ double shfl_xor( double r, int mask )
 {
 #if __CUDA_ARCH__ >= 300
@@ -105,13 +91,12 @@ __device__ __inline__ double shfl_xor( double r, int mask )
 #endif
 }
 
-__device__ __inline__ double shfl_quad( volatile double *smem, double r, int mask, int lane_id_mod_4 )
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 350
+__device__ __inline__ double __ldg(const double *addr)
 {
-  smem[threadIdx.x] = r;
-  int tid = threadIdx.x - lane_id_mod_4;
-  tid += bfe( mask, lane_id_mod_4 << 1, 2 );
-  return smem[tid];
+  return *addr;
 }
+#endif
 
 __device__ __inline__ void load_cg( double &r, const double *__restrict addr )
 {
